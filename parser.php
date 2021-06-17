@@ -27,14 +27,14 @@ while ($row = $stmt->fetch()) {
         }
         var_dump($url);
 
-        if (parseUrl($url) === 0) {
+        if (empty(parseUrl($url))) {
             break;
         };
         break;
     }
 }
 
-function parseUrl(string $url): ?int
+function parseUrl(string $url): array
 {
     $headers = [
         'Connection: keep-alive',
@@ -69,23 +69,36 @@ function parseUrl(string $url): ?int
     }
 
     curl_close($ch);
-    $content = str_get_html(iconv("windows-1251", "utf-8", $html));
-    //$content = str_get_html($html);
-    return parseContent($content);
-    //return parseContent($html);
+    $content = str_get_html(
+        html_entity_decode(
+            iconv("windows-1251", "utf-8", $html)
+        )
+    );
+    $result = parseContent($content);
+    return $result;
 }
 
 //function parseContent(string $content): int
-function parseContent(simple_html_dom $content): int
+function parseContent(simple_html_dom $content): array
 {
+    $result = [];
     $row = $content->find('a.review');
     for ($cnt = 0, $cntMax = count($row); $cnt < $cntMax; $cnt += 2) {
-        var_dump($row[$cnt]->innertext);
+        $element = $row[$cnt]->parent->parent->children;
+
+        $result[] = [
+            'nom' => $element[0]->children[0]->innertext(),
+            'name' => $element[1]->children[0]->innertext(),
+            'countable' => $element[2]->attr('id'),
+            'votes' => $element[3]->innertext(),
+            'average' => $element[4]->innertext(),
+
+        ];
     }
 //    foreach ($row as $r) {
 //        var_dump($r->innertext);
 //    }
-    die();
+//    die();
 //
 //    $tbl = $content->getElementByTagName('table');
 //    foreach ($tbl as $t) {
@@ -93,5 +106,5 @@ function parseContent(simple_html_dom $content): int
 //    }
     //$tbl = preg_match('|<table*</table>|', $content);
     //$tbl = preg_match('|<table>*</table>|', $content->getElementByTagName('table'));
-    return 100;
+    return $result;
 }
