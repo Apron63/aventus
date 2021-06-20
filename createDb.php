@@ -26,20 +26,29 @@ $sql = 'INSERT INTO `category` (`name`, `url`, `anchor`) VALUES
         ';
 $dbcon->exec($sql);
 
-$sql = 'CREATE TABLE IF NOT EXISTS `rating` ( 
+$sql = 'CREATE TABLE IF NOT EXISTS `movie` ( 
             `id` INT NOT NULL AUTO_INCREMENT, 
             `categoryId` INT NOT NULL, 
+            `nom` INT NOT NULL, 
+            `name` VARCHAR(255) NOT NULL,
+            `year` INT, 
+            `description` VARCHAR(1000),
+            `image` VARCHAR(255),
+            PRIMARY KEY (`ID`),
+            INDEX `date_idx` (`nom`, `categoryId`)) 
+        ';
+$dbcon->exec($sql);
+echo 'Table MOVIE has been created.' . PHP_EOL;
+
+$sql = 'CREATE TABLE IF NOT EXISTS `rating` ( 
+            `id` INT NOT NULL AUTO_INCREMENT, 
             `position` INT NOT NULL, 
             `estimateRating` FLOAT NOT NULL, 
             `votes` INT NOT NULL, 
             `averageRating` FLOAT NOT NULL,
-            `name` VARCHAR(255) NOT NULL,
-            `year` INT NOT NULL, 
-            `description` VARCHAR(1000) NOT NULL,
-            `image` VARCHAR(255) NOT NULL,
             `parseDate` DATE NOT NULL,
             PRIMARY KEY (`ID`),
-            INDEX `date_idx` (`parseDate`)) 
+            INDEX `date_idx` (`id`)) 
         ';
 $dbcon->exec($sql);
 echo 'Table RATING has been created.' . PHP_EOL;
