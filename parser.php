@@ -38,7 +38,6 @@ while ($row = $stmt->fetch()) {
         if (!empty($query)) {
             $url .= '?' . http_build_query($query);
         }
-        var_dump($url);
 
         $result = parseUrl($url);
         if (empty($result)) {
@@ -127,22 +126,7 @@ function parseContent(simple_html_dom $content): array
             'average' => (float)$element[4]->innertext(),
         ];
 
-        $cnt = count($result);
-        $detailUrl = BASE_URL . 'cinema.php?id=' . $tmp['id'];
-
-        $detailContent = str_get_html(
-            html_entity_decode(
-                iconv("windows-1251", "utf-8", getContent($detailUrl))
-            )
-        );
-        $detailResult = parseDetailContent($detailContent);
-
-        $tmp['description'] = $detailResult['description'];
-        $tmp['image'] = $detailResult['image'];
-
         $result[] = $tmp;
-
-        echo $tmp['name'] . PHP_EOL;
     }
 
     return $result;
@@ -158,7 +142,21 @@ function parseDetailContent(simple_html_dom $detailContent): array
     $imageUrl = BASE_URL . $row[1]->attr['src'];
     $imageExt = pathinfo($imageUrl, PATHINFO_EXTENSION);
     $savedImageName = uniqid() . '.' . $imageExt;
-    if (file_put_contents(IMAGE_DIR . '/' . $savedImageName, file_get_contents($imageUrl))) {
+
+    /**
+     * Check if image url exist.
+     * In Windows, warning be shown.
+     * @see https://stackoverflow.com/questions/61635366/openssl-error-messages-error14095126-unexpected-eof-while-reading
+     **/
+    try {
+        $imageContent = file_get_contents($imageUrl);
+    } catch (Exception $e) {
+        $result['image'] = null;
+        return $result;
+    }
+
+    // Save the image.
+    if (file_put_contents(IMAGE_DIR . '/' . $savedImageName, $imageContent)) {
         $result['image'] = $savedImageName;
     } else {
         $result['image'] = null;
@@ -169,13 +167,50 @@ function parseDetailContent(simple_html_dom $detailContent): array
 
 function saveToDb($connection, $data, $parsingDate, $categoryId)
 {
-    $values = '';
-    $columns = '`movie_id`, `category_id`, `nom`, `name`, `year`, `image`, `description`';
-    foreach ($data as $row) {
-        $values .= "({$row['id']}, {$categoryId}, {$row['nom']}, \"{$row['name']}\", {$row['year']}, \"{$row['image']}\", \"{$row['description']}\"),";
-    }
-    $values = substr($values, 0, -1);
+    foreach ($data as $item) {
+        $stmt = $connection->prepare('SELECT count(*) FROM `movie` WHERE `movie_id` = :movieId');
+        $stmt->bindParam(':movieId', $item['id']);
+        if ($res = $stmt->execute()) {
+            $cnt = (int)$stmt->fetchColumn();
+            if ($cnt === 0) {
 
-    $sql = "INSERT INTO `movie`({$columns}) VALUES {$values}";
-    $connection->exec($sql);
+                $detailUrl = BASE_URL . 'cinema.php?id=' . $item['id'];
+                $detailContent = str_get_html(
+                    html_entity_decode(
+                        iconv("windows-1251", "utf-8", getContent($detailUrl))
+                    )
+                );
+                $detailResult = parseDetailContent($detailContent);
+
+                $stmt = $connection->prepare("INSERT INTO `movie` (
+                    `movie_id`,
+                    `category_id`,
+                    `nom`,
+                    `name`,
+                    `year`,
+                    `image`,
+                    `description`
+                ) VALUES (
+                    :movieId,
+                    :categoryId,
+                    :nom,
+                    :name,
+                    :year,
+                    :image,
+                    :description
+                )");
+                $stmt->bindParam(':movieId', $item['id']);
+                $stmt->bindParam(':categoryId', $categoryId);
+                $stmt->bindParam(':nom', $item['nom']);
+                $stmt->bindParam(':name', $item['name']);
+                $stmt->bindParam(':year', $item['year']);
+                $stmt->bindParam(':image', $detailResult['image']);
+                $stmt->bindParam(':description', $detailResult['description']);
+
+                if ($res = $stmt->execute()) {
+                    echo 'Добавлено : ' . $item['name'] . PHP_EOL;
+                }
+            }
+        }
+    }
 }

@@ -6,7 +6,6 @@ if (null === $dbcon) {
     exit(1);
 }
 
-// Категории сериалов
 $sql = 'CREATE TABLE IF NOT EXISTS `category` ( 
             `id` INT NOT NULL AUTO_INCREMENT, 
             `name` VARCHAR(255) NOT NULL, 
