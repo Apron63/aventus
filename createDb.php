@@ -27,15 +27,16 @@ $sql = 'INSERT INTO `category` (`name`, `url`, `anchor`) VALUES
 $dbcon->exec($sql);
 
 $sql = 'CREATE TABLE IF NOT EXISTS `movie` ( 
-            `id` INT NOT NULL AUTO_INCREMENT, 
-            `categoryId` INT NOT NULL, 
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `movie_id` INT NOT NULL,
+            `category_id` INT NOT NULL, 
             `nom` INT NOT NULL, 
             `name` VARCHAR(255) NOT NULL,
             `year` INT, 
-            `description` VARCHAR(1000),
+            `description` VARCHAR(10000),
             `image` VARCHAR(255),
             PRIMARY KEY (`ID`),
-            INDEX `date_idx` (`nom`, `categoryId`)) 
+            INDEX `movie_id` (`movie_id`)) 
         ';
 $dbcon->exec($sql);
 echo 'Table MOVIE has been created.' . PHP_EOL;

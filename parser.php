@@ -9,6 +9,8 @@ if (null === $dbcon) {
 
 define('TAIL', 'public_list_anchor');
 define('MAX_PAGE_LIMIT', 5);
+define('BASE_URL', 'http://www.world-art.ru/cinema/');
+define('IMAGE_DIR', 'image');
 
 $date =
 
@@ -114,18 +116,52 @@ function parseContent(simple_html_dom $content): array
         }
         $element = $row[$cnt]->parent->parent->children;
 
-        $result[] = [
+        $tmp = [
             'nom' => (int)$element[0]->children[0]->innertext(),
             'name' => $element[1]->children[0]->innertext(),
             'year' => (int)preg_replace('|\D|', '', $element[1]->nodes[1]->innertext()),
-            'url' => $element[1]->children[0]->attr['href'],
+            'id' => (int)preg_replace('|\D|', '', $element[1]->children[0]->attr['href']),
             'countable' => (float)$element[2]->innertext(),
             'votes' => (int)$element[3]->children[0]->innertext(),
             'votesUrl' => $element[3]->children[0]->attr['href'],
             'average' => (float)$element[4]->innertext(),
         ];
 
+        $cnt = count($result);
+        $detailUrl = BASE_URL . 'cinema.php?id=' . $tmp['id'];
 
+        $detailContent = str_get_html(
+            html_entity_decode(
+                iconv("windows-1251", "utf-8", getContent($detailUrl))
+            )
+        );
+        $detailResult = parseDetailContent($detailContent);
+
+        $tmp['description'] = $detailResult['description'];
+        $tmp['image'] = $detailResult['image'];
+
+        $result[] = $tmp;
+
+        echo $tmp['name'] . PHP_EOL;
+    }
+
+    return $result;
+}
+
+function parseDetailContent(simple_html_dom $detailContent): array
+{
+    $result = [];
+    $row = $detailContent->find('p.review');
+    $result['description'] = $row[0]->innertext();
+
+    $row = $detailContent->find('img');
+    $imageUrl = BASE_URL . $row[1]->attr['src'];
+    $imageExt = pathinfo($imageUrl, PATHINFO_EXTENSION);
+    $savedImageName = uniqid() . '.' . $imageExt;
+    if (file_put_contents(IMAGE_DIR . '/' . $savedImageName, file_get_contents($imageUrl))) {
+        $result['image'] = $savedImageName;
+    } else {
+        $result['image'] = null;
     }
 
     return $result;
@@ -134,9 +170,9 @@ function parseContent(simple_html_dom $content): array
 function saveToDb($connection, $data, $parsingDate, $categoryId)
 {
     $values = '';
-    $columns = '`categoryId`, `nom`, `name`, `year`, `image`';
+    $columns = '`movie_id`, `category_id`, `nom`, `name`, `year`, `image`, `description`';
     foreach ($data as $row) {
-        $values .= "({$categoryId}, {$row['nom']}, \"{$row['name']}\", {$row['year']}, \"{$row['url']}\"),";
+        $values .= "({$row['id']}, {$categoryId}, {$row['nom']}, \"{$row['name']}\", {$row['year']}, \"{$row['image']}\", \"{$row['description']}\"),";
     }
     $values = substr($values, 0, -1);
 
