@@ -41,14 +41,23 @@ $dbcon->exec($sql);
 echo 'Table MOVIE has been created.' . PHP_EOL;
 
 $sql = 'CREATE TABLE IF NOT EXISTS `rating` ( 
-            `id` INT NOT NULL AUTO_INCREMENT, 
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `movie_id` INT NOT NULL,
+            `parse_date` DATE NOT NULL, 
             `position` INT NOT NULL, 
             `estimateRating` FLOAT NOT NULL, 
             `votes` INT NOT NULL, 
             `averageRating` FLOAT NOT NULL,
-            `parseDate` DATE NOT NULL,
             PRIMARY KEY (`ID`),
-            INDEX `date_idx` (`id`)) 
+            INDEX `date_idx` (`movie_id`,`parse_date`)) 
         ';
 $dbcon->exec($sql);
 echo 'Table RATING has been created.' . PHP_EOL;
+
+$sql = 'CREATE TABLE IF NOT EXISTS `config` ( 
+            `parsing_date` DATE NULL) 
+        ';
+$dbcon->exec($sql);
+$sql = 'INSERT INTO `config` (`parsing_date`) VALUES ("0000.00.00")';
+$dbcon->exec($sql);
+echo 'Table CONFIG has been created.' . PHP_EOL;

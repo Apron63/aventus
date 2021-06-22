@@ -12,7 +12,7 @@ define('MAX_PAGE_LIMIT', 5);
 define('BASE_URL', 'http://www.world-art.ru/cinema/');
 define('IMAGE_DIR', 'image');
 
-$date =
+$date = getLastParsingDate($dbcon);
 
 $sql = "SELECT * FROM category";
 $stmt = $dbcon->query($sql);
@@ -212,5 +212,17 @@ function saveToDb($connection, $data, $parsingDate, $categoryId)
                 }
             }
         }
+    }
+}
+
+function getLastParsingDate($connection): DateTime
+{
+    $sql = "SELECT * FROM config";
+    $stmt = $connection->query($sql);
+    $row = $stmt->fetchAll();
+    if ($row) {
+        return new DateTime($row[0][0]);
+    } else {
+        return new DateTime('0000-00-00');
     }
 }
