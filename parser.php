@@ -11,7 +11,7 @@ define('TAIL', 'public_list_anchor');
 define('MAX_PAGE_LIMIT', 5);
 define('BASE_URL', 'http://www.world-art.ru/cinema/');
 define('IMAGE_DIR', 'image');
-define('SEARCHING_CONTENT', 'подробный список голосования');
+define('SEARCHING_CONTENT', 'подробный список голосования</h3>');
 
 $date = getLastParsingDate($dbcon);
 
@@ -138,10 +138,10 @@ function parseContent(simple_html_dom $content): array
 function parseVotes(string $url)
 {
     $searchContent = iconv("windows-1251", "utf-8", getContent(BASE_URL . $url));
-    $beginPosition = mb_strpos($searchContent, SEARCHING_CONTENT);
+    $beginPosition = strpos($searchContent, SEARCHING_CONTENT);
     //$searchContent = mb_substr($searchContent, $beginPosition + strlen(SEARCHING_CONTENT));
-    $searchContent = mb_strcut($searchContent, $beginPosition + strlen(SEARCHING_CONTENT));
-    $endPosition = mb_strpos($searchContent, '</table>');
+    $searchContent = substr($searchContent, $beginPosition + strlen(SEARCHING_CONTENT));
+    $endPosition = strpos($searchContent, '</table>');
     $searchContent = mb_strcut($searchContent, 0, $endPosition);
     $content = str_get_html(iconv("windows-1251", "utf-8", $searchContent));
 
