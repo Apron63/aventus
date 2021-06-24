@@ -135,17 +135,64 @@ function parseContent(simple_html_dom $content): array
     return $result;
 }
 
-function parseVotes(string $url)
+function parseVotes(string $url): array
 {
-    $searchContent = iconv("windows-1251", "utf-8", getContent(BASE_URL . $url));
-    $beginPosition = strpos($searchContent, SEARCHING_CONTENT);
-    //$searchContent = mb_substr($searchContent, $beginPosition + strlen(SEARCHING_CONTENT));
-    $searchContent = substr($searchContent, $beginPosition + strlen(SEARCHING_CONTENT));
-    $endPosition = strpos($searchContent, '</table>');
-    $searchContent = mb_strcut($searchContent, 0, $endPosition);
-    $content = str_get_html(iconv("windows-1251", "utf-8", $searchContent));
+    $result = [];
+    $content = str_get_html(iconv("windows-1251", "utf-8", getContent(BASE_URL . $url)));
+    $row = $content->find('a.review');
+    $last = count($row);
 
-    $row = $content->find('.review');
+    unset($row[$last - 1]);
+    unset($row[0]);
+    unset($row[1]);
+
+    $oneOrOther = true;
+    foreach ($row as $item) {
+        $oneOrOther = !$oneOrOther;
+        if ($oneOrOther) {
+            continue;
+        }
+
+        $el = $item->parent();
+        $text = $el->parent->parent->parent->parent->children[0]->innertext();
+        preg_match_all('|\d{4}\.\d{2}\.\d{2}|', $text, $arr);
+        if (!empty($arr[0])) {
+            $date = DateTime::createFromFormat('Y.m.d', $arr[0][0]);
+            $rate = (float)$el->parent->parent->parent->parent->children[3]->innertext();
+
+            if (!isset($compareDate)) {
+                $compareDate = $date;
+                $agregatedRating = 0.0;
+                $ratingCnt = 0;
+            }
+
+            if ($compareDate != $date) {
+
+                echo $compareDate->format('d.m.Y') . ' ' . $agregatedRating / $ratingCnt . PHP_EOL;
+
+                $result[] = [
+                    'date' => $compareDate->format('d.m.Y'),
+                    'rating' => (float)($agregatedRating / $ratingCnt),
+                ];
+
+                $compareDate = $date;
+                $agregatedRating = 0.0;
+                $ratingCnt = 0;
+            }
+
+            $agregatedRating += $rate;
+            $ratingCnt++;
+        }
+    }
+
+    if ($agregatedRating != 0) {
+        $result[] = [
+            'date' => $compareDate->format('d.m.Y'),
+            'rating' => (float)($agregatedRating / $ratingCnt),
+        ];
+    }
+
+    return $result;
 }
 
 function parseDetailContent(simple_html_dom $detailContent): array
