@@ -2,7 +2,8 @@
 
 require_once 'db.php';
 
-if (null === $dbcon) {
+$connection = new db();
+if (null === $connection->dbcon) {
     exit(1);
 }
 
@@ -13,7 +14,7 @@ $sql = 'CREATE TABLE IF NOT EXISTS `category` (
             `anchor` INT, 
             PRIMARY KEY (`ID`))
         ';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 echo 'Table CATEGORY has been created.' . PHP_EOL;
 
 $sql = 'INSERT INTO `category` (`name`, `url`, `anchor`) VALUES
@@ -23,7 +24,7 @@ $sql = 'INSERT INTO `category` (`name`, `url`, `anchor`) VALUES
             ("Корейские дорамы", "http://www.world-art.ru/cinema/rating_tv_top.php", 4),
             ("Российские сериалы", "http://www.world-art.ru/cinema/rating_tv_top.php", 3)
         ';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 
 $sql = 'CREATE TABLE IF NOT EXISTS `movie` ( 
             `id` INT NOT NULL AUTO_INCREMENT,
@@ -37,27 +38,24 @@ $sql = 'CREATE TABLE IF NOT EXISTS `movie` (
             PRIMARY KEY (`ID`),
             INDEX `movie_id` (`movie_id`)) 
         ';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 echo 'Table MOVIE has been created.' . PHP_EOL;
 
 $sql = 'CREATE TABLE IF NOT EXISTS `rating` ( 
             `id` INT NOT NULL AUTO_INCREMENT,
             `movie_id` INT NOT NULL,
-            `parse_date` DATE NOT NULL, 
-            `position` INT NOT NULL, 
-            `estimateRating` FLOAT NOT NULL, 
-            `votes` INT NOT NULL, 
-            `averageRating` FLOAT NOT NULL,
+            `vote_date` DATE NOT NULL, 
+            `rate` FLOAT NOT NULL, 
             PRIMARY KEY (`ID`),
-            INDEX `date_idx` (`movie_id`,`parse_date`)) 
+            INDEX `date_idx` (`movie_id`,`vote_date`)) 
         ';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 echo 'Table RATING has been created.' . PHP_EOL;
 
 $sql = 'CREATE TABLE IF NOT EXISTS `config` ( 
             `parsing_date` DATE NULL) 
         ';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 $sql = 'INSERT INTO `config` (`parsing_date`) VALUES ("0000.00.00")';
-$dbcon->exec($sql);
+$connection->dbcon->exec($sql);
 echo 'Table CONFIG has been created.' . PHP_EOL;
