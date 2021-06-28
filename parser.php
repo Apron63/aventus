@@ -290,10 +290,10 @@ class parser
                     $detailUrl = self::BASE_URL . 'cinema.php?id=' . $item['id'];
                     $detailContent = str_get_html(
                         html_entity_decode(
-                            iconv("windows-1251", "utf-8", getContent($detailUrl))
+                            iconv("windows-1251", "utf-8", $this->getContent($detailUrl))
                         )
                     );
-                $detailResult = parseDetailContent($detailContent);
+                    $detailResult = $this->parseDetailContent($detailContent);
 
                     $stmt = $this->connection->dbcon->prepare("INSERT INTO `movie` (
                     `movie_id`,
@@ -336,12 +336,9 @@ class parser
     private function saveRateToDb(array $item)
     {
         foreach ($item['votes'] as $el) {
-//            $stmt = $this->connection->dbcon->prepare(
-//                'INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)'
-//            );
-//            $stmt->bindParam(':movieId', $item['id']);
-            $sql = "INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)";
-            $stmt = $this->connection->query($sql);
+
+            $sql = "INSERT INTO `rating` (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)";
+            $stmt = $this->connection->dbcon->prepare($sql);
             $stmt->bindParam(':movieId', $item['id']);
             $stmt->bindParam(':voteDate', $el['date']);
             $stmt->bindParam(':rate', $el['rate']);
