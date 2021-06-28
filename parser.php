@@ -181,6 +181,11 @@ class parser
         $content = str_get_html(
             iconv("windows-1251", "utf-8", $this->getContent(self::BASE_URL . $url))
         );
+
+        if (empty($content)) {
+            return $result;
+        }
+
         $row = $content->find('a.review');
         $last = count($row);
 
@@ -293,6 +298,11 @@ class parser
                             iconv("windows-1251", "utf-8", $this->getContent($detailUrl))
                         )
                     );
+
+                    if (empty($detailContent)) {
+                        return;
+                    }
+
                     $detailResult = $this->parseDetailContent($detailContent);
 
                     $stmt = $this->connection->dbcon->prepare("INSERT INTO `movie` (
