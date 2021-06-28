@@ -7,6 +7,7 @@ class parser
 {
     private const IMAGE_DIR = 'image';
     private const BASE_URL = 'http://www.world-art.ru/cinema/';
+    private const MAX_PAGE_LIMIT = 5;
 
     private \DateTime $parseDate;
     private db $connection;
@@ -64,7 +65,7 @@ class parser
 
                 $this->saveToDb($result, $row['id']);
 
-                if ($page++ >= MAX_PAGE_LIMIT) {
+                if ($page++ >= self::MAX_PAGE_LIMIT) {
                     break;
                 }
             }
@@ -335,23 +336,12 @@ class parser
     private function saveRateToDb(array $item)
     {
         foreach ($item['votes'] as $el) {
-//        $sql = "SELECT * FROM rating WHERE movie_id = :movieId AND DATEDIFF(date1, date2)vote_date = :voteDate";
-//        $stmt = $connection->query($sql);
-//        $stmt->bindParam(':movieId', $item['id']);
-//        $stmt->bindParam(':voteDate', $el['date']);
-//        $row = $stmt->fetchAll();
-//        if ($row) {
-//            return new DateTime($row[0][0]);
-//        } else {
-//            return new DateTime('0000-00-00');
-//        }
-
-            $stmt = $this->connection->dbcon->prepare(
-                'INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)'
-            );
-//        $stmt->bindParam(':movieId', $item['id']);
-//        $sql = "INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)";
-//        $stmt = $connection->query($sql);
+//            $stmt = $this->connection->dbcon->prepare(
+//                'INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)'
+//            );
+//            $stmt->bindParam(':movieId', $item['id']);
+            $sql = "INSERT INTO rating (`movie_id`, `vote_date`, `rate`) VALUES (:movieId, :voteDate, :rate)";
+            $stmt = $this->connection->query($sql);
             $stmt->bindParam(':movieId', $item['id']);
             $stmt->bindParam(':voteDate', $el['date']);
             $stmt->bindParam(':rate', $el['rate']);

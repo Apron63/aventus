@@ -57,16 +57,16 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="moreInfoModalLongTitle">Расширенная информация</h5>
+                <h5 class="modal-title" id="movie-name"></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div id="movie-name"></div>
                 <div id="image">
                     <img src="">
                 </div>
+                <div id="movie-description"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -77,8 +77,8 @@
 
 <script>
 
-    let BASE_URL = 'http://www.world-art.ru/cinema/';
-    let IMAGE_PATH = 'image';
+    var BASE_URL = 'http://www.world-art.ru/cinema/';
+    var IMAGE_PATH = 'image';
 
     window.onload = function () {
 
@@ -120,22 +120,36 @@
                 + "<div class='card' style='width: 18rem;'>"
                 + "<div class='card-body'>"
                 + "<button class='btn btn-primary more-info' data-movie-id='" + el.movieId + "'"
-                + " data-image='/" + IMAGE_PATH + "/" + el.image + "'"
                 + "'>" + el.name + "</button>"
                 + "</div>"
+                + "<div>" + el.avg + "</div>"
                 + "</div>"
             ;
         });
         $("#output").html(output);
     }
 
+    function drawOne(data) {
+
+        let result = JSON.parse(data);
+        let image = '/image/' + result.image;
+        $("#movie-name").html(result.name);
+        $("#movie-description").html(result.description);
+        $("#image").find("img").attr("src", image);
+        $("#moreInfoModal").modal("show");
+    }
+
     $("#output").on("click", function (e) {
         if ($(e.target).hasClass("more-info")) {
             let id = $(e.target).attr("data-movie-id");
-            let image = $(e.target).attr("data-image");
-            $("#movie-name").html(id);
-            $("#image").find("img").attr("src", image);
-            $("#moreInfoModal").modal("show");
+            $.ajax({
+                url: "get-data-one.php",
+                data: {id: id}
+            }).done(function (data) {
+                drawOne(data);
+            }).fail(function () {
+                console.log("fail");
+            });
         }
     })
 
